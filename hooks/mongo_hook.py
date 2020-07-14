@@ -30,16 +30,6 @@ class MongoHook(BaseHook):
         """
         conn = self.connection
 
-        uri = 'mongodb://{creds}{host}{port}/{database}'.format(
-            creds='{}:{}@'.format(
-                conn.login, conn.password
-            ) if conn.login is not None else '',
-
-            host=conn.host,
-            port='' if conn.port is None else ':{}'.format(conn.port),
-            database='' if conn.schema is None else conn.schema
-        )
-
         # Mongo Connection Options dict that is unpacked when passed to MongoClient
         options = self.extras
 
@@ -47,7 +37,11 @@ class MongoHook(BaseHook):
         if options.get('ssl', False):
             options.update({'ssl_cert_reqs': CERT_NONE})
 
-        return MongoClient(uri, **options)
+        return MongoClient(conn.host,
+            port='' if conn.port is None else int(conn.port),
+            username = conn.login,
+            password = conn.password,
+            **options)
 
     def get_collection(self, mongo_collection, mongo_db=None):
         """
